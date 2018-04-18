@@ -1,5 +1,5 @@
 {
-  "name": "disco",
+  "name": "@justinbeckwith/disco",
   "version": "0.0.1",
   "description": "Download Google API discover docs and do stuff with them",
   "main": "./build/src/index.js",
