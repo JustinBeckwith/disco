@@ -25,7 +25,7 @@ function mockSchema() {
         .replyWithFile(200, fakeSchemaPath),
     nock('https://supersecret.googleapis.com')
         .get('/$discovery/rest?version=v1')
-        .reply(403)
+        .reply(404)
   ];
 }
 

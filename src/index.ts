@@ -1,6 +1,7 @@
-import axios, {AxiosError} from 'axios';
+import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import {EventEmitter} from 'events';
 import * as fs from 'fs';
+import * as rax from 'retry-axios';
 
 import {FragmentResponse, Schema, SchemaResource, Schemas} from './types';
 
@@ -19,20 +20,27 @@ export interface DownloadOptions {
   exportPath?: string;
 }
 
-export interface SchemaProgress {
+export interface SchemaError {
+  err: Error;
   schema: Schema;
-  totalSchemas: number;
-  completeSchemas: number;
 }
 
 export declare interface DiscoEvents {
-  on(event: 'schemaError', listener: (err: Error) => void): this;
+  on(event: 'statusMessage', listener: (message: string) => void): this;
+  on(event: 'schemaStart', listener: (schema: Schema) => void): this;
+  on(event: 'schemaDone', listener: (schema: Schema) => void): this;
+  on(event: 'schemaError', listener: (info: SchemaError) => void): this;
   on(event: 'discoveryDownloaded', listener: (schemas: Schemas) => void): this;
-  on(event: 'schemaGenerated',
-     listener: (schemaProgress: SchemaProgress) => void): this;
   on(event: 'fragmentDownloaded',
      listener: (fragment: FragmentResponse) => void): this;
+  on(event: 'fragmentStart', listener: (path: string) => void): this;
 }
+
+const ax = axios.create();
+ax.defaults = {
+  raxConfig: {instance: ax, noResponseRetries: 3}
+} as rax.RaxConfig;
+rax.attach(ax);
 
 export class Disco extends EventEmitter implements DiscoEvents {
   /**
@@ -49,17 +57,16 @@ export class Disco extends EventEmitter implements DiscoEvents {
     const url = DISCOVERY_URL;
 
     // Obtain the top level schema document, with all the APIs.
-    const res = await axios.request<Schemas>({url, headers});
+    const res = await ax.request<Schemas>({url, headers});
     const apis = res.data.items;
-    this.emit('discoveryDownloaded', apis);
 
-    // Keep count of the schemas we've generated so far
-    let schemaCount = 0;
+    this.emit('discoveryDownloaded', res.data);
 
     // Iterate over each API returned, and obtain the sub-API spec doc.
     const jobs = apis.map(async api => {
       try {
-        const res = await axios.request<Schema>({url: api.discoveryRestUrl});
+        this.emit('schemaStart', api);
+        const res = await ax.request<Schema>({url: api.discoveryRestUrl});
         const schema = res.data;
 
         // For each API, go download all the code fragments if
@@ -67,15 +74,16 @@ export class Disco extends EventEmitter implements DiscoEvents {
         await this.populateFragmentsForSchema(
             api.discoveryRestUrl, schema,
             `${FRAGMENT_URL}${schema.name}/${schema.version}/0/${schema.name}`);
-        schemaCount++;
-        this.emit(
-            'schemaGenerated',
-            {schema, totalSchemas: apis.length, completeSchemas: schemaCount});
+        this.emit('schemaDone', api);
         return schema;
       } catch (e) {
+        const err = e as AxiosError;
         e.message = `Error generating schema. ${e.message}`;
-        this.emit('schemaError', e);
-        return null;
+        if (err.response && err.response.status === 404) {
+          this.emit('schemaError', {err: e, schema: api});
+          return null;
+        }
+        throw err;
       }
     });
     const items = (await Promise.all(jobs)).filter(x => !!x);
@@ -107,7 +115,9 @@ export class Disco extends EventEmitter implements DiscoEvents {
           const methodSchema = schema.methods[methodName];
           methodSchema.sampleUrl = `${apiPath}.${methodName}.frag.json`;
           try {
-            const res = await axios.request<FragmentResponse>(
+            const path = `${apiPath}.${methodName}`.slice(58);
+            this.emit('fragmentStart', path);
+            const res = await ax.request<FragmentResponse>(
                 {url: methodSchema.sampleUrl});
             const fragment = res.data.codeFragment['Node.js'];
             if (fragment) {
