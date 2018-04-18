@@ -1,0 +1,86 @@
+{
+  "format": "1",
+  "apiName": "bigquery",
+  "apiVersion": "v2",
+  "apiRevision": "20171027",
+  "id": "bigquery.datasets.delete",
+  "codeFragment": {
+    "C#": {
+      "generationVersion": "",
+      "generationDate": "2017-11-06T19:04:28Z",
+      "fragment": "// BEFORE RUNNING:\n// ---------------\n// 1. If not already done, enable the BigQuery API\n//    and check the quota for your project at\n//    https://console.developers.google.com/apis/api/bigquery\n// 2. This sample uses Application Default Credentials for authentication.\n//    If not already done, install the gcloud CLI from\n//    https://cloud.google.com/sdk and run\n//    `gcloud beta auth application-default login`.\n//    For more information, see\n//    https://developers.google.com/identity/protocols/application-default-credentials\n// 3. Install the C# client library by adding a dependency on the relevant NuGet\n//    package. Libraries published by Google are owned by google-apis-packages:\n//    https://www.nuget.org/profiles/google-apis-packages\n\nusing Google.Apis.Auth.OAuth2;\nusing Google.Apis.Bigquery.v2;\nusing Google.Apis.Services;\nusing Newtonsoft.Json;\nusing System.Threading.Tasks;\n\nnamespace BigquerySample\n{\n    public class BigqueryExample\n    {\n        public static void Main(string[] args)\n        {\n            BigqueryService bigqueryService = new BigqueryService(new BaseClientService.Initializer\n            {\n                HttpClientInitializer = GetCredential(),\n                ApplicationName = \"Google-BigquerySample/0.1\",\n            });\n\n            // Project ID of the dataset being deleted\n            string projectId = \"my-project-id\";  // TODO: Update placeholder value.\n\n            // Dataset ID of dataset being deleted\n            string datasetId = \"my-dataset-id\";  // TODO: Update placeholder value.\n\n            DatasetsResource.DeleteRequest request = bigqueryService.Datasets.Delete(projectId, datasetId);\n\n            // To execute asynchronously in an async method, replace `request.Execute()` as shown:\n            request.Execute();\n            // await request.ExecuteAsync();\n        }\n\n        public static GoogleCredential GetCredential()\n        {\n            GoogleCredential credential = Task.Run(() =\u003e GoogleCredential.GetApplicationDefaultAsync()).Result;\n            if (credential.IsCreateScopedRequired)\n            {\n                credential = credential.CreateScoped(\"https://www.googleapis.com/auth/cloud-platform\");\n            }\n           return credential;\n        }\n    }\n}",
+      "libraries": [
+        {
+          "url": "https://developers.google.com/api-client-library/dotnet/apis/bigquery/v2",
+          "name": ".NET client library"
+        }
+      ]
+    },
+    "Go": {
+      "generationVersion": "",
+      "generationDate": "2017-11-06T19:04:28Z",
+      "fragment": "package main\n\n// BEFORE RUNNING:\n// ---------------\n// 1. If not already done, enable the BigQuery API\n//    and check the quota for your project at\n//    https://console.developers.google.com/apis/api/bigquery\n// 2. This sample uses Application Default Credentials for authentication.\n//    If not already done, install the gcloud CLI from\n//    https://cloud.google.com/sdk/ and run\n//    `gcloud beta auth application-default login`.\n//    For more information, see\n//    https://developers.google.com/identity/protocols/application-default-credentials\n// 3. Install and update the Go dependencies by running `go get -u` in the\n//    project directory.\n\nimport (\n\t\"log\"\n\n\t\"golang.org/x/net/context\"\n\t\"golang.org/x/oauth2/google\"\n\t\"google.golang.org/api/bigquery/v2\"\n)\n\nfunc main() {\n\tctx := context.Background()\n\n\tc, err := google.DefaultClient(ctx, bigquery.CloudPlatformScope)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\n\tbigqueryService, err := bigquery.New(c)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\n\t// Project ID of the dataset being deleted\n\tprojectId := \"my-project-id\" // TODO: Update placeholder value.\n\n\t// Dataset ID of dataset being deleted\n\tdatasetId := \"my-dataset-id\" // TODO: Update placeholder value.\n\n\tif err := bigqueryService.Datasets.Delete(projectId, datasetId).Context(ctx).Do(); err != nil {\n\t\tlog.Fatal(err)\n\t}\n}\n",
+      "libraries": [
+        {
+          "url": "https://github.com/google/google-api-go-client",
+          "name": "Go client library"
+        }
+      ]
+    },
+    "Java": {
+      "generationVersion": "",
+      "generationDate": "2017-11-06T19:04:28Z",
+      "fragment": "/*\n * BEFORE RUNNING:\n * ---------------\n * 1. If not already done, enable the BigQuery API\n *    and check the quota for your project at\n *    https://console.developers.google.com/apis/api/bigquery\n * 2. This sample uses Application Default Credentials for authentication.\n *    If not already done, install the gcloud CLI from\n *    https://cloud.google.com/sdk and run\n *    `gcloud beta auth application-default login`.\n *    For more information, see\n *    https://developers.google.com/identity/protocols/application-default-credentials\n * 3. Install the Java client library on Maven or Gradle. Check installation\n *    instructions at https://github.com/google/google-api-java-client.\n *    On other build systems, you can add the jar files to your project from\n *    https://developers.google.com/resources/api-libraries/download/bigquery/v2/java\n */\n\nimport com.google.api.client.googleapis.auth.oauth2.GoogleCredential;\nimport com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;\nimport com.google.api.client.http.HttpTransport;\nimport com.google.api.client.json.JsonFactory;\nimport com.google.api.client.json.jackson2.JacksonFactory;\nimport com.google.api.services.bigquery.Bigquery;\nimport java.io.IOException;\nimport java.security.GeneralSecurityException;\nimport java.util.Arrays;\n\npublic class BigqueryExample {\n  public static void main(String args[]) throws IOException, GeneralSecurityException {\n    // Project ID of the dataset being deleted\n    String projectId = \"my-project-id\"; // TODO: Update placeholder value.\n\n    // Dataset ID of dataset being deleted\n    String datasetId = \"my-dataset-id\"; // TODO: Update placeholder value.\n\n    Bigquery bigqueryService = createBigqueryService();\n    Bigquery.Datasets.Delete request = bigqueryService.datasets().delete(projectId, datasetId);\n\n    request.execute();\n  }\n\n  public static Bigquery createBigqueryService() throws IOException, GeneralSecurityException {\n    HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();\n    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();\n\n    GoogleCredential credential = GoogleCredential.getApplicationDefault();\n    if (credential.createScopedRequired()) {\n      credential =\n          credential.createScoped(Arrays.asList(\"https://www.googleapis.com/auth/cloud-platform\"));\n    }\n\n    return new Bigquery.Builder(httpTransport, jsonFactory, credential)\n        .setApplicationName(\"Google-BigquerySample/0.1\")\n        .build();\n  }\n}\n",
+      "libraries": [
+        {
+          "url": "https://developers.google.com/api-client-library/java/apis/bigquery/v2",
+          "name": "Java client library"
+        }
+      ]
+    },
+    "Node.js": {
+      "generationVersion": "",
+      "generationDate": "2017-11-06T19:04:28Z",
+      "fragment": "// BEFORE RUNNING:\n// ---------------\n// 1. If not already done, enable the BigQuery API\n//    and check the quota for your project at\n//    https://console.developers.google.com/apis/api/bigquery\n// 2. This sample uses Application Default Credentials for authentication.\n//    If not already done, install the gcloud CLI from\n//    https://cloud.google.com/sdk and run\n//    `gcloud beta auth application-default login`.\n//    For more information, see\n//    https://developers.google.com/identity/protocols/application-default-credentials\n// 3. Install the Node.js client library by running\n//    `npm install googleapis --save`\n\nvar google = require('googleapis');\nvar bigquery = google.bigquery('v2');\n\nauthorize(function(authClient) {\n  var request = {\n    // Project ID of the dataset being deleted\n    projectId: 'my-project-id',  // TODO: Update placeholder value.\n\n    // Dataset ID of dataset being deleted\n    datasetId: 'my-dataset-id',  // TODO: Update placeholder value.\n\n    auth: authClient,\n  };\n\n  bigquery.datasets.delete(request, function(err) {\n    if (err) {\n      console.error(err);\n      return;\n    }\n  });\n});\n\nfunction authorize(callback) {\n  google.auth.getApplicationDefault(function(err, authClient) {\n    if (err) {\n      console.error('authentication failed: ', err);\n      return;\n    }\n    if (authClient.createScopedRequired \u0026\u0026 authClient.createScopedRequired()) {\n      var scopes = ['https://www.googleapis.com/auth/cloud-platform'];\n      authClient = authClient.createScoped(scopes);\n    }\n    callback(authClient);\n  });\n}",
+      "libraries": [
+        {
+          "url": "https://github.com/google/google-api-nodejs-client",
+          "name": "Node.js client library"
+        }
+      ]
+    },
+    "PHP": {
+      "generationVersion": "",
+      "generationDate": "2017-09-06T07:58:17Z",
+      "fragment": "\u003c?php\n/*\n * BEFORE RUNNING:\n * ---------------\n * 1. If not already done, enable the BigQuery API\n *    and check the quota for your project at\n *    https://console.developers.google.com/apis/api/bigquery\n * 2. This sample uses Application Default Credentials for authentication.\n *    If not already done, install the gcloud CLI from\n *    https://cloud.google.com/sdk and run\n *    `gcloud beta auth application-default login`.\n *    For more information, see\n *    https://developers.google.com/identity/protocols/application-default-credentials\n * 3. Install the PHP client library with Composer. Check installation\n *    instructions at https://github.com/google/google-api-php-client.\n */\n\n// Autoload Composer.\nrequire_once __DIR__ . '/vendor/autoload.php';\n\n$client = new Google_Client();\n$client-\u003esetApplicationName('Google-BigquerySample/0.1');\n$client-\u003euseApplicationDefaultCredentials();\n$client-\u003eaddScope('https://www.googleapis.com/auth/cloud-platform');\n\n$service = new Google_Service_Bigquery($client);\n\n// Project ID of the dataset being deleted\n$projectId = 'my-project-id';  // TODO: Update placeholder value.\n\n// Dataset ID of dataset being deleted\n$datasetId = 'my-dataset-id';  // TODO: Update placeholder value.\n\n$service-\u003edatasets-\u003edelete($projectId, $datasetId);\n?\u003e",
+      "libraries": [
+        {
+          "url": "https://github.com/google/google-api-php-client-services",
+          "name": "PHP client library"
+        }
+      ]
+    },
+    "Python": {
+      "generationVersion": "",
+      "generationDate": "2017-11-06T19:04:28Z",
+      "fragment": "\"\"\"\nBEFORE RUNNING:\n---------------\n1. If not already done, enable the BigQuery API\n   and check the quota for your project at\n   https://console.developers.google.com/apis/api/bigquery\n2. This sample uses Application Default Credentials for authentication.\n   If not already done, install the gcloud CLI from\n   https://cloud.google.com/sdk and run\n   `gcloud beta auth application-default login`.\n   For more information, see\n   https://developers.google.com/identity/protocols/application-default-credentials\n3. Install the Python client library for Google APIs by running\n   `pip install --upgrade google-api-python-client`\n\"\"\"\n\nfrom googleapiclient import discovery\nfrom oauth2client.client import GoogleCredentials\n\ncredentials = GoogleCredentials.get_application_default()\n\nservice = discovery.build('bigquery', 'v2', credentials=credentials)\n\n# Project ID of the dataset being deleted\nproject_id = 'my-project-id'  # TODO: Update placeholder value.\n\n# Dataset ID of dataset being deleted\ndataset_id = 'my-dataset-id'  # TODO: Update placeholder value.\n\nrequest = service.datasets().delete(projectId=project_id, datasetId=dataset_id)\nrequest.execute()",
+      "libraries": [
+        {
+          "url": "https://github.com/google/google-api-python-client",
+          "name": "Python client library"
+        }
+      ]
+    },
+    "Ruby": {
+      "generationVersion": "",
+      "generationDate": "2017-09-06T07:58:17Z",
+      "fragment": "# BEFORE RUNNING:\n# ---------------\n# 1. If not already done, enable the BigQuery API\n#    and check the quota for your project at\n#    https://console.developers.google.com/apis/api/bigquery\n# 2. This sample uses Application Default Credentials for authentication.\n#    If not already done, install the gcloud CLI from\n#    https://cloud.google.com/sdk and run\n#    `gcloud beta auth application-default login`.\n#    For more information, see\n#    https://developers.google.com/identity/protocols/application-default-credentials\n# 3. Install the Ruby client library and Application Default Credentials\n#    library by running `gem install google-api-client` and\n#    `gem install googleauth`\n\nrequire 'googleauth'\nrequire 'google/apis/bigquery_v2'\n\nservice = Google::Apis::BigqueryV2::BigqueryService.new\n\nservice.authorization = \\\n    Google::Auth.get_application_default(['https://www.googleapis.com/auth/cloud-platform'])\n\n# Project ID of the dataset being deleted\nproject_id = 'my-project-id'  # TODO: Update placeholder value.\n\n# Dataset ID of dataset being deleted\ndataset_id = 'my-dataset-id'  # TODO: Update placeholder value.\n\nservice.delete_dataset(project_id, dataset_id)",
+      "libraries": [
+        {
+          "url": "https://github.com/google/google-api-ruby-client",
+          "name": "Ruby client library"
+        }
+      ]
+    }
+  }
+}
