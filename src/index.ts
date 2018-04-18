@@ -19,8 +19,19 @@ export interface DownloadOptions {
   exportPath?: string;
 }
 
+export interface SchemaProgress {
+  schema: Schema;
+  totalSchemas: number;
+  completeSchemas: number;
+}
+
 export declare interface DiscoEvents {
   on(event: 'schemaError', listener: (err: Error) => void): this;
+  on(event: 'discoveryDownloaded', listener: (schemas: Schemas) => void): this;
+  on(event: 'schemaGenerated',
+     listener: (schemaProgress: SchemaProgress) => void): this;
+  on(event: 'fragmentDownloaded',
+     listener: (fragment: FragmentResponse) => void): this;
 }
 
 export class Disco extends EventEmitter implements DiscoEvents {
@@ -40,6 +51,10 @@ export class Disco extends EventEmitter implements DiscoEvents {
     // Obtain the top level schema document, with all the APIs.
     const res = await axios.request<Schemas>({url, headers});
     const apis = res.data.items;
+    this.emit('discoveryDownloaded', apis);
+
+    // Keep count of the schemas we've generated so far
+    let schemaCount = 0;
 
     // Iterate over each API returned, and obtain the sub-API spec doc.
     const jobs = apis.map(async api => {
@@ -52,6 +67,10 @@ export class Disco extends EventEmitter implements DiscoEvents {
         await this.populateFragmentsForSchema(
             api.discoveryRestUrl, schema,
             `${FRAGMENT_URL}${schema.name}/${schema.version}/0/${schema.name}`);
+        schemaCount++;
+        this.emit(
+            'schemaGenerated',
+            {schema, totalSchemas: apis.length, completeSchemas: schemaCount});
         return schema;
       } catch (e) {
         e.message = `Error generating schema. ${e.message}`;
@@ -93,6 +112,7 @@ export class Disco extends EventEmitter implements DiscoEvents {
             const fragment = res.data.codeFragment['Node.js'];
             if (fragment) {
               schema.methods[methodName].fragment = fragment.fragment;
+              this.emit('fragmentDownloaded', fragment.fragment);
             }
           } catch (e) {
             const err = e as AxiosError;
